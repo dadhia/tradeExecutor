@@ -1,0 +1,22 @@
+{
+  "name": "trade-executor",
+  "version": "1.0.0",
+  "description": "AWS lambda for managing your portfolio with the alpaca api.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dadhia/tradeExecutor.git"
+  },
+  "author": "Devan Adhia",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dadhia/tradeExecutor/issues"
+  },
+  "homepage": "https://github.com/dadhia/tradeExecutor#readme",
+  "dependencies": {
+    "@alpacahq/alpaca-trade-api": "^1.2.6"
+  }
+}
