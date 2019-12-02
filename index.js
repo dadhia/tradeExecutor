@@ -1,56 +1,50 @@
 'use strict';
-console.log('Loading hello world function');
- 
-exports.handler = async (event) => {
-    let name = "you";
-    let city = 'World';
-    let time = 'day';
-    let day = '';
-    let responseCode = 200;
-    console.log("request: " + JSON.stringify(event));
-    
-    if (event.queryStringParameters && event.queryStringParameters.name) {
-        console.log("Received name: " + event.queryStringParameters.name);
-        name = event.queryStringParameters.name;
-    }
-    
-    if (event.queryStringParameters && event.queryStringParameters.city) {
-        console.log("Received city: " + event.queryStringParameters.city);
-        city = event.queryStringParameters.city;
-    }
-    
-    if (event.headers && event.headers['day']) {
-        console.log("Received day: " + event.headers.day);
-        day = event.headers.day;
-    }
-    
-    if (event.body) {
-        let body = JSON.parse(event.body)
-        if (body.time) 
-            time = body.time;
-    }
- 
-    let greeting = `Good ${time}, ${name} of ${city}.`;
-    if (day) greeting += ` Happy ${day}!`;
+const pick = require('lodash/pick');
+const Alpaca = require('@alpacahq/alpaca-trade-api')
+const alpaca = new Alpaca();
 
-    let responseBody = {
-        message: greeting,
-        input: event
-    };
-    
-    // The output from a Lambda proxy integration must be 
-    // in the following JSON object. The 'headers' property 
-    // is for custom response headers in addition to standard 
-    // ones. The 'body' property  must be a JSON string. For 
-    // base64-encoded payload, you must also set the 'isBase64Encoded'
-    // property to 'true'.
-    let response = {
-        statusCode: responseCode,
-        headers: {
-            "x-custom-header" : "my custom header value"
-        },
-        body: JSON.stringify(responseBody)
-    };
-    console.log("response: " + JSON.stringify(response))
-    return response;
+const handleGetAccount = async () => {
+	return getAccountDetails().then(accountDetails => {
+		return {
+			statusCode: 200,
+			body: JSON.stringify(accountDetails),
+		};
+	}, error => {
+		return {
+			statusCode: 500,
+			body: JSON.stringify({error}),
+		};
+	});
 };
+
+const getAccountDetails = async () => {
+	return alpaca.getAccount().then(account => {
+		return pick(account,
+			'account_number',
+			'currency',
+			'buying_power',
+			'cash',
+			'portfolio_value',
+			'equity',
+			'last_equity',
+			'long_market_value',
+			'short_market_value'
+		);
+	}, reason => {
+		throw new Error('Unable to get account details.');
+	});
+};
+
+const isGetAccountRequest = (event, context) => {
+	return (event.resource === '/getAccount') && (event.httpMethod === 'GET');
+};
+ 
+exports.handler = async (event, context) => {
+	if (isGetAccountRequest(event, context)) {
+		return handleGetAccount();
+	}
+	return {
+		statusCode: 404,
+	};
+};
+
